@@ -1,18 +1,12 @@
 ## Classes
-
 <dl>
-<dt><a href="#Observer">Observer</a> ⇐ <code><a href="#EventEmitter">EventEmitter</a></code></dt>
-<dd><p>Observer that provides sync events when data is changed. For data-centric application this allows to build more flat architecture where different logical parts can subscribe to observer and do not need to interact between each other, by that decoupling logic, improving modularity.</p>
-</dd>
+<dt><a href="#Observer">Observer</a> extends <code><a href="#EventEmitter">EventEmitter</a></code></dt>
 <dt><a href="#EventEmitter">EventEmitter</a></dt>
-<dd></dd>
 <dt><a href="#EventHandler">EventHandler</a></dt>
-<dd></dd>
 </dl>
-
 <a name="Observer"></a>
 
-## Observer ⇐ [<code>EventEmitter</code>](#EventEmitter)
+## Observer *extends* [<code>EventEmitter</code>](#EventEmitter)
 Observer that provides sync events when data is changed. For data-centric application this allows to build more flat architecture where different logical parts can subscribe to observer and do not need to interact between each other, by that decoupling logic, improving modularity.
 
 **Extends**: [<code>EventEmitter</code>](#EventEmitter)  
