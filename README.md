@@ -1,0 +1,2 @@
+# mr-Observer
+An observer is a wrapper over JSON data, that provides an interface to know when data is changed, with a focus on performance and memory efficiency. For data-centric design, this provides a modular and robust architecture for applications with various data-dependent parts: ui, real-time render, history undo/redo, real-time collaboration, and more. This pattern has been used for years in PlayCanvas Editor providing fast iteration and ease of development in a complex environment.
