@@ -21,10 +21,10 @@
   },
   "keywords": [
     "observer",
-    "object",
-    "proxy",
-    "data",
-    "centric"
+    "object proxy",
+    "data proxy",
+    "json proxy",
+    "data centric"
   ],
   "author": {
     "name": "Maksims Mihejevs",
