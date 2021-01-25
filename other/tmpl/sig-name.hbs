@@ -9,6 +9,6 @@
 {{#if @returnSymbol}} {{@returnSymbol}}{{/if~}}
 {{#if @returnTypes}} {{>linked-type-list types=@returnTypes delimiter=" \| " }}{{/if~}}
 {{#if @suffix}} {{@suffix}}{{/if~}}
-{{{@depClose}~}}
+  {{{@depClose}~}}
 {{~/sig}}{{/if~}}
 {{#if virtual}}*{{/if}}{{#with (parentObject)}}{{#if virtual}}*{{/if~}}{{/with~}}
