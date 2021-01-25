@@ -17,20 +17,20 @@ Observer that provides sync events when data is changed. For data-centric applic
 | data | <code>object</code> | Data that obsserver is modifying. This data should not be modified by application logic. |
 
 
-[new Observer([data])](#new_Observer_new) (constructor)
-[.set([path], data)](#Observer+set)
-[.patch([path], data)](#Observer+patch)
-[.unset([path])](#Observer+unset)
-[.get([path])](#Observer+get) ⇒ <code>\*</code>
-[.clear()](#Observer+clear)
-[.on(name, callback, [scope], [once])](#EventEmitter+on) ⇒ [<code>EventHandler</code>](#EventHandler)
-[.once(name, callback, [scope])](#EventEmitter+once) ⇒ [<code>EventHandler</code>](#EventHandler)
-[.emit(name, [...args])](#EventEmitter+emit)
-[.off([name], [callback], [scope])](#EventEmitter+off)
-[[path]:set (value, old)](#Observer+event_[path]_set) (event)
-[*:set (path, value, old)](#Observer+event_*_set) (event)
-[[path]:unset (old)](#Observer+event_[path]_unset) (event)
-[*:unset (path, old)](#Observer+event_*_unset) (event)
+[new Observer([data])](#new_Observer_new) (constructor)<br />
+[.set([path], data)](#Observer+set)<br />
+[.patch([path], data)](#Observer+patch)<br />
+[.unset([path])](#Observer+unset)<br />
+[.get([path])](#Observer+get) ⇒ <code>\*</code><br />
+[.clear()](#Observer+clear)<br />
+[.on(name, callback, [scope], [once])](#EventEmitter+on) ⇒ [<code>EventHandler</code>](#EventHandler)<br />
+[.once(name, callback, [scope])](#EventEmitter+once) ⇒ [<code>EventHandler</code>](#EventHandler)<br />
+[.emit(name, [...args])](#EventEmitter+emit)<br />
+[.off([name], [callback], [scope])](#EventEmitter+off)<br />
+[[path]:set (value, old)](#Observer+event_[path]_set) (event)<br />
+[*:set (path, value, old)](#Observer+event_*_set) (event)<br />
+[[path]:unset (old)](#Observer+event_[path]_unset) (event)<br />
+[*:unset (path, old)](#Observer+event_*_unset) (event)<br />
 
 <a name="new_Observer_new"></a>
 
