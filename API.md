@@ -23,7 +23,6 @@ Observer that provides sync events when data is changed. For data-centric applic
 | data | <code>object</code> | Data that obsserver is modifying. This data should not be modified by application logic. |
 
 
-
 [new Observer([data])](#new_Observer_new) (constructor)
 [.set([path], data)](#Observer+set)
 [.patch([path], data)](#Observer+patch)
@@ -38,6 +37,7 @@ Observer that provides sync events when data is changed. For data-centric applic
 [*:set (path, value, old)](#Observer+event_*_set) (event)
 [[path]:unset (old)](#Observer+event_[path]_unset) (event)
 [*:unset (path, old)](#Observer+event_*_unset) (event)
+
 <a name="new_Observer_new"></a>
 
 ### new Observer([data])
