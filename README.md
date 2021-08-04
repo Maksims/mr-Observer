@@ -33,6 +33,15 @@ import Observer from 'mr-observer';
 ```
 Use built files from `dist` directory for browser. It will load ES8+ version if it is supported ([~94%](https://caniuse.com/?search=ES8)), otherwise it will load ES5 (ECMA2009) version that supports pretty much [every](https://caniuse.com/?search=ES5) platform.
 
+#### CDN ([jsDelivr](https://www.jsdelivr.com/))
+
+You can use a public CDN for the library:
+
+ES8+ module: https://cdn.jsdelivr.net/npm/mr-observer@0.1/dist/mr-observer.min.js  
+ES5 version: https://cdn.jsdelivr.net/npm/mr-observer@0.1/dist/mr-observer.es5.min.js
+
+#### Example
+
 ```js
 let earth = new Observer({ age: 4.543, population: 7.594 });
 
