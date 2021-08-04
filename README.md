@@ -45,7 +45,7 @@ ES5 version: https://cdn.jsdelivr.net/npm/mr-observer@0.1/dist/mr-observer.es5.m
 ```js
 let earth = new Observer({ age: 4.543, population: 7.594 });
 
-earth.on('population:set', function (value) {
+earth.on('population:set', function (path, value) {
     element.textContent = value;
 });
 
