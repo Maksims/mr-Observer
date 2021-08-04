@@ -7,7 +7,7 @@
 <a name="Observer"></a>
 
 ## Observer *extends* [<code>EventEmitter</code>](#EventEmitter)
-Observer that provides sync events when data is changed. For data-centric application this allows to build more flat architecture where different logical parts can subscribe to observer and do not need to interact between each other, by that decoupling logic, improving modularity.
+Observer that provides sync events when data is changed. For data-centric application this allows to build more flat architecture where different logical parts can subscribe to observer and do not need to interact between each other, by that decoupling logic, improving modularity. Data can be any complexity JSON, and provides specific path or simple query for partial paths using wildcard notation for subscribing to changes.
 
 **Extends**: [<code>EventEmitter</code>](#EventEmitter)  
 #### Properties:
@@ -27,10 +27,8 @@ Observer that provides sync events when data is changed. For data-centric applic
 [.once(name, callback, [scope])](#EventEmitter+once) ⇒ [<code>EventHandler</code>](#EventHandler)<br />
 [.emit(name, [...args])](#EventEmitter+emit)<br />
 [.off([name], [callback], [scope])](#EventEmitter+off)<br />
-[[path]:set (value, old)](#Observer+event_[path]_set) (event)<br />
-[*:set (path, value, old)](#Observer+event_*_set) (event)<br />
-[[path]:unset (old)](#Observer+event_[path]_unset) (event)<br />
-[*:unset (path, old)](#Observer+event_*_unset) (event)<br />
+[[path:]set (path, value, old)](#Observer+event_[path_]set) (event)<br />
+[[path:]unset (path, old)](#Observer+event_[path_]unset) (event)<br />
 
 <a name="new_Observer_new"></a>
 
@@ -42,12 +40,16 @@ Observer that provides sync events when data is changed. For data-centric applic
 
 **Example**  
 ```js
-let earth = new Observer({ age: 4.543, population: 7.594 });element.textContent = earth.get('population');earth.on('population:set', function (value) {    element.textContent = value;});earth.set('population', 7.595); // triggers "population:set" event
+let planet = new Observer({ age: 4.543, population: 7.594 });// get dataelement.textContent = planet.get('population');// know when data changesplanet.on('population:set', function (path, value) {    element.textContent = value;});// set dataplanet.set('population', 7.595); // triggers "population:set" event
+```
+**Example**  
+```js
+// more complex example for datalet planets = new Observer({    earth: {        age: 4.543,        population: 7.594    },    mars: {        age: 4.603,        population: 0    }});// know when any planet population changes// using a wildcard notation to match multiple pathsplanets.on('*.population:set', function (path, population) {    const planet = path[0];    elements[planet].textContent = population;});// set dataplanets.set('earth.population', 7.595); // triggers "*.population:set" event
 ```
 <a name="Observer+set"></a>
 
 ### .set([path], data)
-Set data by path. If in process of setting existing object values will be unset, it will emit `unset` events with related paths. New and modified values will trigger `set` events with related paths.
+Set data by a specific path. If in process of setting existing object values will be unset, it will emit `unset` events with related paths. New and modified values will trigger `set` events with related paths.
 
 
 | Param | Type | Description |
@@ -62,7 +64,7 @@ obj.set('position.x', 42);obj.set('position', { x: 4, y: 2 });
 <a name="Observer+patch"></a>
 
 ### .patch([path], data)
-Patch data by path. In process of setting, it will not unset values that are not provided in patch data. But still can trigger unset events if object is changed to something else, so it will emit `unset` events with related paths. New and modified values will trigger `set` events with related paths.
+Patch data by a specific path. In process of setting, it will not unset values that are not provided in patch data. But still can trigger unset events if object is changed to something else, so it will emit `unset` events with related paths. New and modified values will trigger `set` events with related paths.
 
 
 | Param | Type | Description |
@@ -77,7 +79,7 @@ let obj = new Observer({ position: { x: 4, y: 2 } });obj.patch('position', { z:
 <a name="Observer+unset"></a>
 
 ### .unset([path])
-Unset data by path. It will emit `unset` events with related paths. If path is not provided, it will reset root of data to empty object.
+Unset data by a specific path. It will emit `unset` events with related paths. If path is not provided, it will reset root of data to empty object.
 
 
 | Param | Type | Description |
@@ -91,7 +93,7 @@ obj.unset('position.z');
 <a name="Observer+get"></a>
 
 ### .get([path]) ⇒ <code>\*</code>
-Get data by path. Returns raw data based on path. If path is not provided will return root data of observer. This data should not be modified by application logic, and is subject to change by obseerver functions.
+Get data by a specific path. Returns raw data based on path. If path is not provided will return root data of observer. This data should not be modified by application logic, and is subject to change by obseerver functions.
 
 **Returns**: <code>\*</code> - Data based on provided path.  
 
@@ -113,6 +115,7 @@ Resets observer, its data to empty object and removes all subscribed events.
 ### .on(name, callback, [scope], [once]) ⇒ [<code>EventHandler</code>](#EventHandler)
 Attach an event handler.
 
+**Overrides**: [<code>on</code>](#EventEmitter+on)  
 **Returns**: [<code>EventHandler</code>](#EventHandler) - Object that can be used to manage the event.  
 
 | Param | Type | Description |
@@ -174,65 +177,56 @@ Remove event handlers based on provided arguments.
 ```js
 obj.off(); // removes all eventsobj.off('event'); // removes all events named `event`.obj.off(/input:\w+/); // removes all events with name matching regular expressionobj.off('event', fn); // removes events named `event` with `fn`obj.off('event', fn, obj); // removes events named `event` with `fn` callback and `obj` as a scope.
 ```
-<a name="Observer+event_[path]_set"></a>
+<a name="Observer+event_[path_]set"></a>
 
-### (event) [path]:set (value, old)
-Fired when value have been set/changed on a specified path.
+### (event) [path:]set (path, value, old)
+Fired when value have been set/changed on a path. Path can be a specific or using a wildcard notation for broader matches. Also path can be omitted completely to match event for any changes.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
+| path | <code>Array.&lt;string&gt;</code> | Path to the value changed as a mutable array of strings. Do not modify this array. |
 | value | <code>\*</code> | New value. |
 | old | <code>\*</code> | Old value. |
 
 **Example**  
 ```js
-obj.on('population:set', function (value) {    element.textContent = value;});
+// specific pathobj.on('earth.population:set', function (path, value, old) {    element.textContent = value;});
 ```
-<a name="Observer+event_*_set"></a>
+**Example**  
+```js
+// using wildcard with partial path, which will match any changes// where second level property name is `population`obj.on('*.population:set', function (path, value, old) {    const planet = path[0];    elements[planet].textContent = value;});
+```
+**Example**  
+```js
+const obj = new Observer({ position: { x: 0, y: 0, z: 0 } });// using wildcard to match any axis change of a position objectobj.on('position.*:set', function (path, value, old) {    const axis = path[1];    setAxis(axis, value);});
+```
+**Example**  
+```js
+obj.on('set', function (path, value, old) {    // any change of data will trigger this event});
+```
+<a name="Observer+event_[path_]unset"></a>
 
-### (event) \*:set (path, value, old)
-Fired when any value have been set/changed.
+### (event) [path:]unset (path, old)
+Fired when value have been unset on a path. Same rules apply as for `set` event when defining path.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| path | <code>string</code> | Path of value changed. |
-| value | <code>\*</code> | New value. |
+| path | <code>Array.&lt;string&gt;</code> | Path to the value changed as a mutable array of strings. Do not modify this array. |
 | old | <code>\*</code> | Old value. |
 
 **Example**  
 ```js
-obj.on('*:set', function (path, value, old) {    console.log(`"${path}" has been changed to: "${value}", from "${old}"`);});
+obj.on('earth.population:unset', function (path, old) {    console.log(`'earth.population' has been unset`);});
 ```
-<a name="Observer+event_[path]_unset"></a>
-
-### (event) [path]:unset (old)
-Fired when value have been unset on a specified path.
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| old | <code>\*</code> | Old value. |
-
 **Example**  
 ```js
-obj.on('population:unset', function (old) {    console.log("'population' has been unset");});
+obj.on('*:unset', function (path) {    console.log(`planet '${path[0]}' has been unset`);});
 ```
-<a name="Observer+event_*_unset"></a>
-
-### (event) \*:unset (path, old)
-Fired when any value have been unset.
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| path | <code>string</code> | Path of value unset. |
-| old | <code>\*</code> | Old value. |
-
 **Example**  
 ```js
-obj.on('*:unset', function (path, old) {    console.log(`"${path}" has been unset`);});
+obj.on('unset', function (path) {    console.log(`'${path.join('.')}' has been unset`);});
 ```
 <a name="external_EventEmitter"></a>
 

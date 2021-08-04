@@ -103,8 +103,8 @@ Set can fire "unset" events:
 let obj = new Observer({ position: { x: 4, y: 2 } });
 
 // this will trigger twice: `position.x` and `position.y`
-obj.on('*:unset', function (path) {
-    console.log(`"${path}" has been unset`);
+obj.on('unset', function (path) {
+    console.log(`"${path.join('.')}" has been unset`);
 });
 
 obj.set('position', { z: 64 });
@@ -128,8 +128,8 @@ Case where "unset" event can still occur:
 let obj = new Observer({ position: { x: 4, y: 2 } });
 
 // this will trigger twice: `position.x` and `position.y`
-obj.on('*:unset', function (path) {
-    console.log(`"${path}" has been unset`);
+obj.on('unset', function (path) {
+    console.log(`"${path.join('.')}" has been unset`);
 });
 
 obj.patch('position', 64);
@@ -160,11 +160,11 @@ obj.clear();
 
 This library is using [mr-EventEmitter](https://github.com/Maksims/mr-EventEmitter/) for events management.
 
-Set event by specific path
+Set event by a specific path
 ```js
 let obj = new Observer({ });
 
-obj.on('hello:set', function (value) {
+obj.on('hello:set', function (path, value) {
     console.log(`"hello" has been changed to "${value}"`);
 });
 
@@ -172,17 +172,45 @@ obj.on('hello:set', function (value) {
 obj.set('hello', 'world');
 ```
 
-Set event without path:
+Set event without path (matches any set):
 ```js
 let obj = new Observer({ });
 
 // this will be executed 3 times
 // with these paths: 'position.x', 'position.y', 'position'
-obj.on('*:set', function (path, value) {
-    console.log(`"${path}" has been changed to "${value}"`);
+obj.on('set', function (path, value) {
+    console.log(`"${path.join('.')}" has been changed to "${value}"`);
 });
 
 obj.set('position', { x: 4, y: 2 });
+```
+
+Set event using wildcard notation:
+```js
+let planets = new Observer({ });
+
+// it will match with any first level property name, where second level property name is `name`
+planets.on('*.name:set', function (path, value) {
+    console.log(`Planet "${path[0]}" name has been changed to "${value}"`);
+});
+
+planets.set('earth', { name: 'Earth' });
+planets.set('mars', { name: 'Mars' });
+```
+
+Second example:
+```js
+let obj = new Observer({
+    position: { x: 0, y: 0, z: 0 }
+});
+
+// it will match path with `position` as first level property and any second level property name
+obj.on('position.*:set', function (path, value) {
+    console.log(`Axis "${path[1]}" has been changed to "${value}"`);
+});
+
+obj.patch('position', { x: 0, y: 4, z: 8 });
+obj.set('position.x', 32);
 ```
 
 Single trigger of change:
@@ -190,7 +218,7 @@ Single trigger of change:
 let obj = new Observer({ });
 
 // will trigger only once
-obj.once('hello:set', function (value) {
+obj.once('hello:set', function (path, value) {
     console.log(`"hello" has been changed to "${value}"`);
 });
 
@@ -203,7 +231,7 @@ Unset event is similar to Set event, with path or without:
 ```js
 let obj = new Observer({ hello: 'world' });
 
-obj.on('hello:unset', function (value) {
+obj.on('hello:unset', function (path, valueOld) {
     console.log(`"hello" has been unset`);
 });
 
@@ -216,7 +244,7 @@ Values and objects provided in events are actual for the duration of the event, 
 let obj = new Observer({ });
 
 let position = null;
-obj.on('position:set', function (value) {
+obj.on('position:set', function (path, value) {
     value.z = 64; // not good
     position = value; // not good
 });
@@ -231,13 +259,12 @@ Remove event by [EventHandler](https://github.com/Maksims/mr-EventEmitter/blob/m
 ```js
 let obj = new Observer({ hello: 'world' });
 
-let evt = obj.on('hello:set', function (value) {
+let evt = obj.on('hello:set', function (path, value) {
     console.log(`hello ${value}`);
 });
 
 obj.set('hello', 'earth');
 obj.set('hello', 'space');
-obj.set('hello', 'black hole');
 evt.off(); // remove event
 obj.set('hello', 'another dimension'); // this will not be logged
 ```

@@ -1,17 +1,17 @@
 {
   "name": "mr-observer",
-  "version": "0.1.3",
+  "version": "1.0.0",
   "description": "An observer is a wrapper over JSON data, that provides an interface to know when data is changed, with a focus on performance and memory efficiency. For data-centric design, this provides a modular and robust architecture for applications with various data-dependent parts: ui, real-time render, history undo/redo, real-time collaboration, and more. This pattern has been used for years in PlayCanvas Editor providing fast iteration and ease of development in a complex environment.",
   "type": "module",
   "main": "src/index.js",
   "browser": "dist/mr-observer.es5.min.js",
   "module": "dist/mr-observer.min.js",
   "scripts": {
+    "docs": "jsdoc2md --partial ./other/tmpl/*.hbs --files ./src/index.js ./node_modules/mr-eventemitter/src/index.js > ./API.md",
     "babel:es5": "babel --config-file ./other/babel-es5.config.json --out-file ./dist/mr-observer.es5.min.js ./src/index.js",
     "babel": "babel --config-file ./other/babel.config.json --out-file ./dist/mr-observer.min.js ./src/index.js",
     "terser:es5": "terser --compress --mangle --output ./dist/mr-observer.es5.min.js -- ./dist/mr-observer.es5.min.js",
     "terser": "terser --compress --mangle --output ./dist/mr-observer.min.js -- ./dist/mr-observer.min.js",
-    "docs": "jsdoc2md --partial ./other/tmpl/*.hbs --files ./src/index.js ./node_modules/mr-eventemitter/src/index.js > ./API.md",
     "build": "npm run babel:es5 && npm run babel && npm run terser:es5 && npm run terser && npm run docs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -41,7 +41,7 @@
   },
   "homepage": "https://github.com/Maksims/mr-Observer#readme",
   "dependencies": {
-    "mr-eventemitter": "^0.1.0"
+    "mr-eventemitter": "^0.1.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.10",
