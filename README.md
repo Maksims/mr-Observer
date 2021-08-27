@@ -60,10 +60,14 @@ earth.set('population', 7.595);
 
 #### Creating:
 
-Creating Observer:
+Creating Observer (object):
 ```js
-let data = { position: { x: 4, y: 2 } };
-let obj = new Observer(data);
+let obj = new Observer({ position: { x: 4, y: 2 } });
+```
+
+Creating Observer (array):
+```js
+let planets = new Observer([ 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune' ]);
 ```
 
 #### Get:
@@ -75,6 +79,10 @@ let obj = new Observer({ position: { x: 4, y: 2 } });
 console.log(obj.get('position.x')); // 4
 console.log(obj.get('position.z')); // undefined
 console.log(obj.get('hello.world')); // undefined
+```
+
+```js
+console.log(planets.get(8)); // undefined, sorry Pluto
 ```
 
 Returned values should NOT be modified by an application logic:
@@ -100,6 +108,11 @@ Set root of the data:
 obj.set({ hello: 'world' });
 ```
 
+If root is an array, index can be used:
+```js
+planets.set(2, 'Earth');
+```
+
 Set will not create missing objects along the path:
 ```js
 let obj = new Observer({ });
@@ -122,7 +135,7 @@ obj.set('position', { z: 64 });
 
 #### Patch:
 
-Patch is used to partially update data, it will not unset values if they are missing in provided data. But can still trigger "unset" event when object is replaced with non-object value.
+Patch is used to partially update data, it will not unset values if they are missing in provided data. But can still trigger "unset" event when object is replaced with non-object value. If patching an array, `insert` event can be triggered when new values added.
 
 It can be used same way as `set` method.
 
@@ -153,7 +166,7 @@ By specific path:
 obj.unset('position.y');
 ```
 
-Reset root to empty empty object:
+Reset root to an empty object:
 ```js
 obj.unset();
 ```
@@ -163,6 +176,75 @@ It is possible to clear (sets to an empty object) an observer without firing "un
 obj.clear();
 ```
 
+
+#### Insert:
+
+When working with arrays, insert, move and remove methods to be used for better control over data.
+
+Insert to an array:
+```js
+const planets = new Observer({
+    earth: {
+        satellites: [ ]
+    }
+});
+planets.insert('earth.satellites', 'moon');
+```
+
+Observer as an array:
+```js
+const primes = new Observer([ 2, 5, 7 ]);
+primes.insert('', 11); // inserts to the end
+```
+
+Insert at a specific index:
+```js
+const primes = new Observer([ 2, 5, 7 ]);
+// we forgot prime number 3 which should be second in a list
+primes.insert('', 3, 1);
+```
+
+Using negative index to insert from the end:
+```js
+let planets = new Observer([ 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'uranus', 'neptune' ]);
+// we forgot saturn!
+// insert to the third index from the end
+planets.insert('', 'saturn', -3);
+```
+
+
+#### Move:
+Moving items within array. It will trigger `move` event for affected items first, and then for the moved one.
+
+```js
+let planets = new Observer([ 'earth', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune' ]);
+// earth should be third!
+// move it from index 0 to index 2
+planets.move('', 0, 2);
+```
+
+Move from the end to the beginning:
+```js
+items.move('', -1, 0);
+```
+
+
+#### Remove:
+Removing items can trigger `move` event for affected items, and then for the removed one will trigger `remove` event.
+
+Remove from the end:
+```js
+let planets = new Observer([ 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto' ]);
+// Sorry pluto!
+planets.remove('', -1);
+```
+
+Remove at a specific index:
+```js
+const primes = new Observer([ 2, 3, 4, 5, 7, 11 ]);
+// 4 is not a prime!
+primes.remove('', 2);
+```
 
 
 #### Subscribing to changes:
@@ -246,6 +328,34 @@ obj.on('hello:unset', function (path, valueOld) {
 
 // this will fire "hello:unset" event
 obj.unset('hello');
+```
+
+Array events: `insert`, `move` and `remove` do not include index in a path:
+```js
+let obj = new Observer({
+    planets: [ 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto' ]
+});
+
+obj.on('planets:remove', function(path, value, index) {
+    // path is [ 'planets' ]
+    console.log(`"${value}" has been removed from ${path.join('.')} at index ${index}`);
+});
+
+// Sorry pluto!
+obj.remove('planets', -1);
+```
+
+Subscribe to `insert` events on array:
+```js
+let obj = new Observer({
+    planets: [ 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune' ]
+});
+
+obj.on('planets:insert', function(path, value, index) {
+    console.log(`"${value}" has been added to ${path.join('.')} at index ${index}`);
+});
+
+obj.insert('planets', 'planet nine');
 ```
 
 Values and objects provided in events are actual for the duration of the event, and should not be stored or modified (if storing is desired then it should be cloned):
