@@ -37,8 +37,8 @@ Use built files from `dist` directory for browser. It will load ES8+ version if 
 
 You can use a public CDN for the library:
 
-ES8+ module: https://cdn.jsdelivr.net/npm/mr-observer@1.0/dist/mr-observer.min.js  
-ES5 version: https://cdn.jsdelivr.net/npm/mr-observer@1.0/dist/mr-observer.es5.min.js
+ES8+ module: https://cdn.jsdelivr.net/npm/mr-observer@1.1/dist/mr-observer.min.js  
+ES5 version: https://cdn.jsdelivr.net/npm/mr-observer@1.1/dist/mr-observer.es5.min.js
 
 #### Example
 
