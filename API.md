@@ -14,13 +14,16 @@ Observer that provides sync events when data is changed. For data-centric applic
 
 | Name | Type | Description |
 | --- | --- | --- |
-| data | <code>object</code> | Data that obsserver is modifying. This data should not be modified by application logic. |
+| data | <code>object</code> \| <code>array</code> | Data that observer is modifying. This data should not be modified by application logic. |
 
 
 [new Observer([data])](#new_Observer_new) (constructor)<br />
 [.set([path], data)](#Observer+set)<br />
-[.patch([path], data)](#Observer+patch)<br />
 [.unset([path])](#Observer+unset)<br />
+[.patch([path], data)](#Observer+patch)<br />
+[.insert(path, data, [index])](#Observer+insert)<br />
+[.move(path, from, to)](#Observer+move)<br />
+[.remove(path, [index])](#Observer+remove)<br />
 [.get([path])](#Observer+get) ⇒ <code>\*</code><br />
 [.clear()](#Observer+clear)<br />
 [.on(name, callback, [scope], [once])](#EventEmitter+on) ⇒ [<code>EventHandler</code>](#EventHandler)<br />
@@ -29,6 +32,9 @@ Observer that provides sync events when data is changed. For data-centric applic
 [.off([name], [callback], [scope])](#EventEmitter+off)<br />
 [[path:]set (path, value, old)](#Observer+event_[path_]set) (event)<br />
 [[path:]unset (path, old)](#Observer+event_[path_]unset) (event)<br />
+[[path:]insert (path, value, index)](#Observer+event_[path_]insert) (event)<br />
+[[path:]move (path, value, from, to)](#Observer+event_[path_]move) (event)<br />
+[[path:]remove (path, value, index)](#Observer+event_[path_]remove) (event)<br />
 
 <a name="new_Observer_new"></a>
 
@@ -36,7 +42,7 @@ Observer that provides sync events when data is changed. For data-centric applic
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [data] | <code>object</code> | Object for initial data. Defaults to { }; |
+| [data] | <code>object</code> \| <code>array</code> | Object or an Array for initial data. Defaults to { }; |
 
 **Example**  
 ```js
@@ -46,20 +52,38 @@ let planet = new Observer({ age: 4.543, population: 7.594 });// get dataeleme
 ```js
 // more complex example for datalet planets = new Observer({    earth: {        age: 4.543,        population: 7.594    },    mars: {        age: 4.603,        population: 0    }});// know when any planet population changes// using a wildcard notation to match multiple pathsplanets.on('*.population:set', function (path, population) {    const planet = path[0];    elements[planet].textContent = population;});// set dataplanets.set('earth.population', 7.595); // triggers "*.population:set" event
 ```
+**Example**  
+```js
+// list of taskslet todos = new Observer([{    text: 'buy a milk',    complete: true}, {    text: 'walk a dog'}]);// subscribe for a new taskstodos.on('insert', (path, value, index) => {    if (path.length) return;    console.log(`new task "${value.text}" been added at position ${index}`);});// subscribe for a task completion state changestodos.on('*.complete:set', (path, value) => {    console.log(`task "${todos.get(path[0] + '.text')}" has been marked "${(!value ? 'not ' : '') + 'complete'}"`);});// add another tasktodos.insert('', { text: 'fix a fence' });// complete a tasktodos.set('1.complete', true);
+```
 <a name="Observer+set"></a>
 
 ### .set([path], data)
-Set data by a specific path. If in process of setting existing object values will be unset, it will emit `unset` events with related paths. New and modified values will trigger `set` events with related paths.
+Set data by a specific path. If in process of setting existing object values will be unset, it will emit `unset` events with related paths. New and modified values will trigger `set` events with related paths. If set is against an array and index is higher then length of an array, it will insert null's until set value and trigger `insert` events.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [path] | <code>string</code> | Path in data to be set to. If path is not provided, it will set the root of observer. |
+| [path] | <code>string</code> \| <code>number</code> | Path in data to be set to. If path is not provided, it will set the root of observer. |
 | data | <code>\*</code> | Data to be set. |
 
 **Example**  
 ```js
 obj.set('position.x', 42);obj.set('position', { x: 4, y: 2 });
+```
+<a name="Observer+unset"></a>
+
+### .unset([path])
+Unset data by a specific path. It will emit `unset` events with related paths. If path is not provided, it will reset root of data to empty object. If unset of an array item, it will additionally trigger `move` and `remove` events if necessary.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [path] | <code>string</code> \| <code>number</code> | Path in data to be unset. If path is not provided, it will set root of observer to empty object. |
+
+**Example**  
+```js
+obj.unset('position.z');
 ```
 <a name="Observer+patch"></a>
 
@@ -69,26 +93,63 @@ Patch data by a specific path. In process of setting, it will not unset values t
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [path] | <code>string</code> | Path in data to be patched. If path is not provided, it will patch the root of observer. |
+| [path] | <code>string</code> \| <code>number</code> | Path in data to be patched. If path is not provided, it will patch the root of observer. |
 | data | <code>\*</code> | Data for patching. |
 
 **Example**  
 ```js
 let obj = new Observer({ position: { x: 4, y: 2 } });obj.patch('position', { z: 7 });// will become { position: { x: 4, y: 2, z: 7 } }
 ```
-<a name="Observer+unset"></a>
+<a name="Observer+insert"></a>
 
-### .unset([path])
-Unset data by a specific path. It will emit `unset` events with related paths. If path is not provided, it will reset root of data to empty object.
+### .insert(path, data, [index])
+Insert data by a specific path. Inserting new data will emit `set` event, if any items were moved in array, they will emit `move` event first.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [path] | <code>string</code> | Path in data to be unset. If path is not provided, it will set root of observer to empty object. |
+| path | <code>string</code> \| <code>number</code> | Path in data to be inserted to. If path is empty string or null, it will insert in the root of observer if it is an array. |
+| data | <code>\*</code> | Data to be set. |
+| [index] | <code>number</code> | Index within array to insert to. By default -1 (the end of an array). 0 - will insert in the beginning. Negative values will count from the end of an array. |
 
 **Example**  
 ```js
-obj.unset('position.z');
+const primes = new Observer([ 2, 5, 7 ]);primes.insert('', 11);primes.insert('', 3, 1); // we forgot prime number 3 which should be second in a list
+```
+**Example**  
+```js
+const planets = new Observer({    saturn: {        satellites: [ ]    }});obj.insert('saturn.satellites', 'rhea');obj.insert('saturn.satellites', 'iapetus');obj.insert('saturn.satellites', 'titan', 0); // insert in the beginning
+```
+<a name="Observer+move"></a>
+
+### .move(path, from, to)
+Move item by a specific path. Moving item will emit `move` event for affected items in arrays first, and then moved item it self. Indices support negative values, counting will be from the end then.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| path | <code>string</code> \| <code>number</code> | Path in data to be inserted to. If path is empty string or null, it will insert in the root of observer if it is an array. |
+| from | <code>number</code> | Index from which item to be moved. |
+| to | <code>number</code> | Index to which item to be moved. |
+
+**Example**  
+```js
+satellites.move('', 1, 3); // from 1 to 3satellites.move('', -1, 0); // from the end to the beginningsatellites.move('', 3, -1); // from 3 to the end
+```
+<a name="Observer+remove"></a>
+
+### .remove(path, [index])
+Remove item by a specific path. Removing item will emit `unset` event for an affected item in arrays first, then `move` event for affected items, and then `remove` for it self. Indices support negative values, counting will be from the end then.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| path | <code>string</code> \| <code>number</code> | Path in data to be inserted to. If path is empty string or null, it will insert in the root of observer if it is an array. |
+| [index] | <code>number</code> | Index from which item to be removed. By default removes from the end of an array. |
+
+**Example**  
+```js
+planets.remove('', 8); // remove 9th item (sad Pluto)
 ```
 <a name="Observer+get"></a>
 
@@ -99,11 +160,15 @@ Get data by a specific path. Returns raw data based on path. If path is not prov
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [path] | <code>string</code> | Path of data to be returned. |
+| [path] | <code>string</code> \| <code>number</code> | Path of data to be returned. |
 
 **Example**  
 ```js
 let x = obj.get('position.x');
+```
+**Example**  
+```js
+const planets = new Observer([ 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune' ])let planet = planets.get(2); // earth
 ```
 <a name="Observer+clear"></a>
 
@@ -185,7 +250,7 @@ Fired when value have been set/changed on a path. Path can be a specific or usin
 
 | Param | Type | Description |
 | --- | --- | --- |
-| path | <code>Array.&lt;string&gt;</code> | Path to the value changed as a mutable array of strings. Do not modify this array. |
+| path | <code>Array.&lt;(string\|number)&gt;</code> | Path to the value changed as a mutable array of strings or numbers. Do not modify this array. |
 | value | <code>\*</code> | New value. |
 | old | <code>\*</code> | Old value. |
 
@@ -213,7 +278,7 @@ Fired when value have been unset on a path. Same rules apply as for `set` event 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| path | <code>Array.&lt;string&gt;</code> | Path to the value changed as a mutable array of strings. Do not modify this array. |
+| path | <code>Array.&lt;(string\|number)&gt;</code> | Path to the value changed as a mutable array of strings or numbers. Do not modify this array. |
 | old | <code>\*</code> | Old value. |
 
 **Example**  
@@ -227,6 +292,79 @@ obj.on('*:unset', function (path) {    console.log(`planet '${path[0]}' has bee
 **Example**  
 ```js
 obj.on('unset', function (path) {    console.log(`'${path.join('.')}' has been unset`);});
+```
+<a name="Observer+event_[path_]insert"></a>
+
+### (event) [path:]insert (path, value, index)
+Fired when value have been inserted on a path. Path can be a specific or using a wildcard notation for broader matches. Also path can be omitted completely to match event for any inserts.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| path | <code>Array.&lt;(string\|number)&gt;</code> | Path to the value changed as a mutable array of strings or numbers. Do not modify this array. |
+| value | <code>\*</code> | New value. |
+| index | <code>number</code> | Index at which value was inserted. |
+
+**Example**  
+```js
+// specific pathobj.on('saturn.satellites:insert', function (path, value, index) {    console.log(`satelite "${value}" has been added to saturn at position ${index}`);});
+```
+**Example**  
+```js
+// using wildcard with partial path, which will match any changes// where second level property name is `satellites`obj.on('*.satellites:insert', function (path, value, index) {    console.log(`satellite "${value}" of planet "${path[0]}", has been inserted at ${index}`);});
+```
+**Example**  
+```js
+obj.on('insert', function (path, value, index) {    // any insert of data will trigger this event});
+```
+<a name="Observer+event_[path_]move"></a>
+
+### (event) [path:]move (path, value, from, to)
+Fired when value have been moved in an array. Path can be a specific or using a wildcard notation for broader matches. Also path can be omitted completely to match event for any changes.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| path | <code>Array.&lt;(string\|number)&gt;</code> | Path to the value changed as a mutable array of strings or numbers. Do not modify this array. |
+| value | <code>\*</code> | Value item moved. |
+| from | <code>number</code> | Index from which value was moved. |
+| to | <code>number</code> | Index to which value was moved. |
+
+**Example**  
+```js
+// specific pathobj.on('saturn.satellites:move', function (path, value, from, to) {});
+```
+**Example**  
+```js
+// using wildcard with partial path, which will match any changes// where second level property name is `satellites`obj.on('*.satellites:move', function (path, value, from, to) {    console.log(`satellite "${value}" of planet "${path[0]}", has been moved from ${from} to ${to}`);});
+```
+**Example**  
+```js
+obj.on('move', function (path, value, from, to) {    // any move of data will trigger this event});
+```
+<a name="Observer+event_[path_]remove"></a>
+
+### (event) [path:]remove (path, value, index)
+Fired when value have been removed from an array. Path can be a specific or using a wildcard notation for broader matches. Also path can be omitted completely to match event for any changes.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| path | <code>Array.&lt;(string\|number)&gt;</code> | Path to the value changed as a mutable array of strings or numbers. Do not modify this array. |
+| value | <code>\*</code> | Old value. |
+| index | <code>number</code> | Index from which value was removed. |
+
+**Example**  
+```js
+// specific pathobj.on('planets:remove', function (path, value, index) {    // oh Pluto!});
+```
+**Example**  
+```js
+// using wildcard with partial path, which will match any changes// where second level property name is `satellites`obj.on('*.satellites:remove', function (path, value, index) {    console.log(`satellite "${value}" of planet "${path[0]}", has been removed from ${index} position`);});
+```
+**Example**  
+```js
+obj.on('remove', function (path, value, index) {    // any remove of data will trigger this event});
 ```
 <a name="external_EventEmitter"></a>
 
