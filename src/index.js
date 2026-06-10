@@ -743,12 +743,12 @@ class Observer extends EventEmitter {
 
         // specific
         if (node.has(part)) {
-            this._emitWildcardDeeper(node.get(part), (path ? part + '.' + path : part), pathParts, depth + 1, type, value, old, to);
+            this._emitWildcardDeeper(node.get(part), (path !== '' ? part + '.' + path : part), pathParts, depth + 1, type, value, old, to);
         }
 
         // wildcard
         if (node.has('*')) {
-            this._emitWildcardDeeper(node.get('*'), (path ? '*.' + path : '*'), pathParts, depth + 1, type, value, old, to);
+            this._emitWildcardDeeper(node.get('*'), (path !== '' ? '*.' + path : '*'), pathParts, depth + 1, type, value, old, to);
         }
     }
 
